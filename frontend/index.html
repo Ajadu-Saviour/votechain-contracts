@@ -3,19 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- SEC: Content Security Policy (#94). Authoritative header (with reporting) is set in deploy/nginx.conf. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://horizon-testnet.stellar.org https://soroban-testnet.stellar.org; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <meta name="description" content="VoteChain governance proposals — view active votes, results, and time remaining." />
   <title>VoteChain — Proposals</title>
-  <script>
-    (function() {
-      const persistedTheme = localStorage.getItem('theme');
-      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (persistedTheme === 'dark' || (!persistedTheme && systemPrefersDark)) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    })();
-  </script>
+  <script src="/theme-init.js"></script>
   <link rel="stylesheet" href="src/styles.css" />
 </head>
 <body>
@@ -104,7 +96,7 @@
             <path d="M24 14v12M24 32v2" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
           </svg>
           <p id="error-message">Could not load proposals.</p>
-          <button id="retry-btn" class="filter-btn" style="margin-top:0.75rem;">Retry</button>
+          <button id="retry-btn" class="filter-btn retry-btn">Retry</button>
         </div>
 
         <ul id="proposal-list" class="proposal-list" role="list">

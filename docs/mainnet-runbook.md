@@ -206,6 +206,15 @@ After a manual deploy, manually update `config/mainnet.toml` and create a GitHub
 
 ---
 
+## Logging and Log Rotation
+
+Production containers (`backend`, `indexer`) log structured JSON to stdout. Local `json-file`
+rotation (`docker-compose.yml`, 100MB × 5 files per service) bounds host disk usage, but mainnet
+deployments must also ship logs to a centralised backend (Loki or CloudWatch Logs) with **30-day
+retention**. See [docs/logging.md](logging.md) for driver configuration and retention setup.
+
+---
+
 ## Rollback
 
 There is no on-chain contract rollback. Once deployed, a contract is immutable.

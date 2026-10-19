@@ -2,7 +2,12 @@
 
 [![CI](https://github.com/veracindarella/votechain-contracts/actions/workflows/ci.yml/badge.svg)](https://github.com/veracindarella/votechain-contracts/actions/workflows/ci.yml)
 [![Coverage](https://github.com/veracindarella/votechain-contracts/actions/workflows/ci.yml/badge.svg?job=coverage)](https://github.com/veracindarella/votechain-contracts/actions/workflows/ci.yml)
+[![Staging Deploy](https://github.com/veracindarella/votechain-contracts/actions/workflows/deploy-staging.yml/badge.svg)](https://github.com/veracindarella/votechain-contracts/actions/workflows/deploy-staging.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Milestone: v1.0 MVP](https://img.shields.io/github/milestones/progress/veracindarella/votechain-contracts/1)](https://github.com/veracindarella/votechain-contracts/milestone/1)
+[![Milestone: v1.1 Delegation](https://img.shields.io/github/milestones/progress/veracindarella/votechain-contracts/2)](https://github.com/veracindarella/votechain-contracts/milestone/2)
+[![Milestone: v1.2 SDK](https://img.shields.io/github/milestones/progress/veracindarella/votechain-contracts/3)](https://github.com/veracindarella/votechain-contracts/milestone/3)
+[![Milestone: v2.0 Multi-sig](https://img.shields.io/github/milestones/progress/veracindarella/votechain-contracts/4)](https://github.com/veracindarella/votechain-contracts/milestone/4)
 
 Soroban smart contracts for **VoteChain** — decentralized on-chain governance and voting on the Stellar blockchain.
 
@@ -16,6 +21,7 @@ VoteChain enables DAOs, protocols, and communities to create proposals, cast tok
 - [Architecture](#architecture)
 - [Features](#features)
 - [Quick Start](#quick-start)
+- [Stellar Protocol Compatibility](#stellar-protocol-compatibility)
 - [Project Structure](#project-structure)
 - [Governance Contract Reference](#governance-contract-reference)
 - [Token Contract Reference](#token-contract-reference)
@@ -220,6 +226,16 @@ make test 2>&1 | head -20
 
 ---
 
+## Stellar Protocol Compatibility
+
+VoteChain maintains compatibility across Stellar protocol versions. Check the [Compatibility Matrix](docs/compatibility.md) for:
+- VoteChain version × Stellar Protocol version compatibility
+- Required SDK versions
+- Breaking changes and migration paths
+- Known limitations
+
+---
+
 ## Project Structure
 
 ```
@@ -303,6 +319,8 @@ votechain-contracts/
 ### Overview
 
 The governance contract manages the complete proposal lifecycle: creation, voting, finalization, execution, and cancellation. It enforces quorum thresholds, prevents double-voting, and maintains an immutable audit trail of all decisions.
+
+> Every function below can return a `ContractError`. See [`docs/errors.md`](docs/errors.md#governance-contract) for the full list of error codes, the function(s) that raise each one, and how to resolve them.
 
 ### Initialization
 
@@ -645,6 +663,8 @@ pub fn unpause(env: Env, admin: Address) -> Result<(), ContractError>
 ### Overview
 
 The token contract implements a SEP-41-compatible governance token with standard ERC-20-style operations: balances, transfers, mint, burn, and spending allowances.
+
+> Every function below can return a `ContractError`. See [`docs/errors.md`](docs/errors.md#token-contract) for the full list of error codes, the function(s) that raise each one, and how to resolve them.
 
 ### Initialization
 
@@ -1242,6 +1262,28 @@ This starts two services:
 - `dev` — Rust + wasm32 + Stellar CLI, with the repo mounted at `/app`
 - `stellar-node` — local Stellar node with Soroban RPC on `http://localhost:8000`
 
+### Health Check Status
+
+All services expose Docker healthchecks. Use `--wait` to block until every service passes:
+
+```bash
+# Start services and wait until all are healthy
+docker compose up --wait
+```
+
+Check the current health status of each service:
+
+```bash
+docker compose ps
+```
+
+The `dev` service depends on `stellar-node` being healthy before it starts, preventing race conditions during container startup.
+
+Service readiness endpoints:
+- `stellar-node` — `http://localhost:8000/` (Soroban RPC)
+- `backend` — `http://localhost:3001/health`
+- `redis` — `redis-cli ping`
+
 ### Run Commands in Container
 
 ```bash
@@ -1378,6 +1420,15 @@ Regression tests with JSON snapshots in `test_snapshots/`:
 # Update snapshots after intentional changes
 cargo test -- --nocapture --test-threads=1
 ```
+
+### WASM Binary Size Tracking
+
+CI records the compiled `governance.wasm` and `token.wasm` sizes on every push to `main`
+(`.github/workflows/ci.yml`, `wasm-size-record` job) into
+[`docs/wasm-size-history.json`](docs/wasm-size-history.json), and renders a size-over-time chart
+and table in [`docs/wasm-size-history.md`](docs/wasm-size-history.md). Every pull request gets a
+sticky comment showing the current vs. base branch sizes and the delta, with a warning if either
+contract grows more than 5% in a single PR.
 
 ---
 

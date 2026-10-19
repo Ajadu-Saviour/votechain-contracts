@@ -78,5 +78,5 @@ pub fn create_test_proposal(t: &TestEnv, proposer: &Address) -> u64 {
 pub fn mint_and_vote(t: &TestEnv, voter: &Address, proposal_id: u64, vote: Vote, amount: i128) {
     let tok = votechain_token::TokenContractClient::new(&t.env, &t.token_id);
     tok.mint(&t.admin, voter, &amount);
-    t.client.cast_vote(voter, &proposal_id, &vote);
+    t.client.cast_vote(voter, &proposal_id, &vote, &None);
 }

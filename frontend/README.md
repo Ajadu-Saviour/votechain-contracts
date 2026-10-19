@@ -72,6 +72,137 @@ Stellar RPC endpoint. The expected shape of each proposal object matches the on-
 }
 ```
 
+## Accessing Stellar Explorer
+
+### Overview
+
+The frontend includes utilities for generating and linking to [Stellar Expert](https://stellar.expert/) (or custom explorer domains) to view transaction provenance and account details.
+
+### Configuration
+
+Set the Stellar network in your `.env`:
+
+```bash
+# For testnet (default)
+VITE_STELLAR_NETWORK=testnet
+
+# For public network (mainnet)
+VITE_STELLAR_NETWORK=public
+
+# For custom explorer (e.g., private networks)
+VITE_STELLAR_EXPLORER_DOMAIN=steexp.com
+```
+
+### Using Explorer Links
+
+#### Utility Functions
+
+```typescript
+import {
+  getTransactionExplorerUrl,
+  getAccountExplorerUrl,
+  openTransactionInExplorer,
+  openAccountInExplorer,
+  truncateAddress,
+} from '@/utils/explorer';
+
+// Generate URLs
+const txUrl = getTransactionExplorerUrl('abc123def...');
+const accountUrl = getAccountExplorerUrl('GXXXXXX...');
+
+// Open in new tab
+openTransactionInExplorer('abc123def...');
+openAccountInExplorer('GXXXXXX...');
+
+// Truncate for display
+const short = truncateAddress('GXXXXXX...', 6, 4);  // → 'GXXXXX...XXXX'
+```
+
+#### React Hook
+
+```typescript
+import { useExplorerLink } from '@/hooks/useExplorerLink';
+
+export function MyComponent() {
+  const { 
+    getTransactionUrl, 
+    getAccountUrl, 
+    openTransaction,
+    openAccount,
+  } = useExplorerLink();
+
+  return (
+    <>
+      <button onClick={() => openTransaction('txhash...')}>
+        View Transaction
+      </button>
+      <a href={getAccountUrl('GXXXXXX...')} target="_blank" rel="noreferrer noopener">
+        View Account
+      </a>
+    </>
+  );
+}
+```
+
+#### React Components
+
+```typescript
+import { TransactionLink, AccountLink } from '@/components/ExplorerLink';
+import { getTransactionExplorerUrl, getAccountExplorerUrl } from '@/utils/explorer';
+
+export function ProposalCard() {
+  return (
+    <div>
+      <TransactionLink
+        txHash="abc123def..."
+        explorerUrl={getTransactionExplorerUrl('abc123def...')}
+      />
+      
+      <AccountLink
+        accountAddress="GXXXXXX..."
+        explorerUrl={getAccountExplorerUrl('GXXXXXX...')}
+        className="proposer-link"
+      />
+    </div>
+  );
+}
+```
+
+### Security
+
+All explorer links:
+- Open in a new tab (`target="_blank"`)
+- Include `rel="noreferrer noopener"` to prevent `window.opener` access
+- Are validated against Stellar address format before rendering
+- Support custom explorer domains for private networks
+
+### Examples
+
+Display truncated transaction hash as link:
+
+```typescript
+<a 
+  href={getTransactionExplorerUrl(txHash)}
+  target="_blank" 
+  rel="noreferrer noopener"
+>
+  {truncateAddress(txHash, 8, 6)}  // → 'abcd...cdef'
+</a>
+```
+
+Display full account address with tooltip:
+
+```typescript
+<a 
+  href={getAccountExplorerUrl(proposer)}
+  target="_blank" 
+  rel="noreferrer noopener"
+  title={`View account: ${proposer}`}
+>
+  {truncateAddress(proposer)}  // → 'GXXXXX...XXXX'
+</a>
+```
+
 ## Accessibility
 
 - WCAG 2.1 AA compliant
@@ -88,3 +219,25 @@ the production preview and runs `npm run audit:a11y`; the axe command fails the
 job when it finds WCAG violations. Keep text and badge foreground/background
 pairs at a minimum contrast ratio of 4.5:1 for normal text and 3:1 for large
 text or UI components in both light and dark themes.
+
+## Network configuration
+
+The target Stellar network is set at build time via `VITE_STELLAR_NETWORK`:
+
+| Value | Behaviour |
+|-------|-----------|
+| `TESTNET` (default) | Warns if the connected Freighter wallet is on mainnet (`PUBLIC`), to prevent accidental mainnet fees. |
+| `MAINNET` | Shows a prominent warning if the wallet is on testnet or any non-mainnet network. |
+
+```bash
+VITE_STELLAR_NETWORK=MAINNET npm run build
+```
+
+The warning can be dismissed, but it is shown again every time the wallet reconnects.
+
+## Security: rendering user content
+
+Proposal titles and descriptions are user-supplied. Always render them as JSX text
+nodes — never with `dangerouslySetInnerHTML`. The ESLint rule `react/no-danger` is
+enabled to enforce this. If rich-text rendering is ever required, sanitise the HTML
+with `dompurify` using an explicit tag/attribute allowlist before rendering.

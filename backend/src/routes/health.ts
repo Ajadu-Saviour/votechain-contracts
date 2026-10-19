@@ -1,3 +1,17 @@
+// Copyright 2024 VoteChain Contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 /**
  * Health and readiness endpoints for VoteChain backend.
  *
@@ -10,7 +24,7 @@
  */
 
 import { Router, Request, Response } from "express";
-import { isRedisReady } from "../middleware/redisCache";
+import { isRedisReady, getCacheMetrics } from "../middleware/redisCache";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { version } = require("../../package.json") as { version?: string };
@@ -49,6 +63,16 @@ router.get("/ready", (_req: Request, res: Response) => {
     status: "unavailable",
     checks: { redis: false },
   });
+});
+
+/**
+ * GET /metrics/cache
+ *
+ * Exposes Redis cache hit/miss counters and current Redis connectivity. (#38)
+ * The redis_up field is false when Redis is unreachable and caching is degraded.
+ */
+router.get("/metrics/cache", (_req: Request, res: Response) => {
+  res.status(200).json(getCacheMetrics());
 });
 
 export default router;

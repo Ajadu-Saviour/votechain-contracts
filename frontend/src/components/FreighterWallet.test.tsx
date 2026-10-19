@@ -1,3 +1,17 @@
+// Copyright 2024 VoteChain Contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 /**
  * Tests for FreighterWallet component (issue #11).
  * Covers: renders connect button, connect flow, disconnect flow,
@@ -87,6 +101,24 @@ describe('FreighterWallet', () => {
       expect(screen.getByRole('alert')).toBeInTheDocument()
     );
     expect(screen.getByRole('alert')).toHaveTextContent(/network mismatch/i);
+  });
+
+  it('lets the user dismiss the mismatch warning and shows it again on reconnect', async () => {
+    const user = userEvent.setup();
+    installMockFreighter({
+      getNetwork: vi.fn().mockResolvedValue('PUBLIC'),
+    });
+    render(<FreighterWallet />);
+
+    await user.click(screen.getByRole('button', { name: /connect (freighter )?wallet/i }));
+    await waitFor(() => expect(screen.getByTestId('network-mismatch')).toBeInTheDocument());
+
+    await user.click(screen.getByRole('button', { name: /dismiss network warning/i }));
+    expect(screen.queryByTestId('network-mismatch')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /disconnect wallet/i }));
+    await user.click(screen.getByRole('button', { name: /connect (freighter )?wallet/i }));
+    await waitFor(() => expect(screen.getByTestId('network-mismatch')).toBeInTheDocument());
   });
 
   it('shows error and install link when Freighter extension is missing', async () => {

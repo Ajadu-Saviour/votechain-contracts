@@ -108,7 +108,7 @@ mod delegation_tests {
         advance_past_start(&t);
 
         // Attempt direct vote — should fail with VotingPowerDelegated
-        let result = t.client.try_cast_vote(&delegator, &proposal_id, &Vote::Yes);
+        let result = t.client.try_cast_vote(&delegator, &proposal_id, &Vote::Yes, &None);
         assert_eq!(
             result,
             Err(Ok(ContractError::VotingPowerDelegated)),
@@ -133,7 +133,7 @@ mod delegation_tests {
         advance_past_start(&t);
 
         // Now the direct vote should succeed
-        t.client.cast_vote(&delegator, &proposal_id, &Vote::Yes);
+        t.client.cast_vote(&delegator, &proposal_id, &Vote::Yes, &None);
 
         let proposal = t.client.get_proposal(&proposal_id).unwrap();
         assert_eq!(proposal.votes_yes, 500);

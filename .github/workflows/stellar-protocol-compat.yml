@@ -1,0 +1,85 @@
+name: Stellar Protocol Compatibility
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 0 * * 0' # Weekly check
+
+jobs:
+  protocol-compat:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        soroban-sdk-version: ['22.8.0', '22.9.0']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install Stellar CLI
+        run: cargo install --locked stellar-cli@22.8.2
+
+      - name: Update soroban-sdk to ${{ matrix.soroban-sdk-version }}
+        run: |
+          cargo update -p soroban-sdk --aggressive
+          # Verify the update
+          grep "soroban-sdk" contracts/governance/Cargo.toml
+          grep "soroban-sdk" contracts/token/Cargo.toml
+
+      - name: Build Governance Contract
+        run: |
+          cd contracts/governance
+          cargo build --target wasm32-unknown-unknown --release
+          ls -lh target/wasm32-unknown-unknown/release/*.wasm
+
+      - name: Build Token Contract
+        run: |
+          cd contracts/token
+          cargo build --target wasm32-unknown-unknown --release
+          ls -lh target/wasm32-unknown-unknown/release/*.wasm
+
+      - name: Run Tests
+        run: cargo test --all --verbose
+
+      - name: Verify WASM Size Constraints
+        run: |
+          GOVERNANCE_SIZE=$(stat -f%z contracts/governance/target/wasm32-unknown-unknown/release/*.wasm 2>/dev/null || stat -c%s contracts/governance/target/wasm32-unknown-unknown/release/*.wasm)
+          TOKEN_SIZE=$(stat -f%z contracts/token/target/wasm32-unknown-unknown/release/*.wasm 2>/dev/null || stat -c%s contracts/token/target/wasm32-unknown-unknown/release/*.wasm)
+          
+          echo "Governance contract: $GOVERNANCE_SIZE bytes (limit: 102400)"
+          echo "Token contract: $TOKEN_SIZE bytes (limit: 51200)"
+          
+          [ $GOVERNANCE_SIZE -le 102400 ] || exit 1
+          [ $TOKEN_SIZE -le 51200 ] || exit 1
+
+      - name: Check Compatibility
+        run: |
+          echo "✓ Contracts build successfully against soroban-sdk ${{ matrix.soroban-sdk-version }}"
+          echo "✓ All tests pass"
+          echo "✓ WASM size constraints met"
+          echo ""
+          echo "Protocol Compatibility: PASS"

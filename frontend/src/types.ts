@@ -1,3 +1,17 @@
+// Copyright 2024 VoteChain Contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 export type ProposalState = 'Active' | 'Passed' | 'Rejected' | 'Executed' | 'Cancelled';
 
 /**
@@ -27,6 +41,11 @@ export interface VoteRecord {
   type: 'For' | 'Against' | 'Abstain';
   weight: number;
   votedAt: string;
+  /**
+   * Optional off-chain comment reference (IPFS CID) the voter attached to
+   * explain their rationale. Not validated on-chain — see issue #103.
+   */
+  commentHash?: string | null;
 }
 
 export interface Proposal {

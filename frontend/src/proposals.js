@@ -337,6 +337,12 @@ function render() {
 document.addEventListener('DOMContentLoaded', () => {
   // Filter buttons
   document.querySelectorAll('.filter-btn').forEach(btn => {
+    // Set correct initial aria-pressed state so screen readers know which
+    // filter is active on page load (fixes issue #14).
+    const isInitiallyActive = btn.dataset.filter === activeFilter;
+    btn.classList.toggle('active', isInitiallyActive);
+    btn.setAttribute('aria-pressed', String(isInitiallyActive));
+
     btn.addEventListener('click', () => {
       activeFilter = btn.dataset.filter;
       currentPage  = 1;
@@ -349,6 +355,14 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       render();
+    });
+
+    // Support keyboard activation via Enter / Space (issue #14).
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        btn.click();
+      }
     });
   });
 

@@ -159,7 +159,15 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache Stellar CLI binary
+        id: stellar-cli-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/stellar
+          key: ${{ runner.os }}-stellar-cli-${{ env.STELLAR_CLI_VERSION }}
+
       - name: Install Stellar CLI
+        if: steps.stellar-cli-cache.outputs.cache-hit != 'true'
         run: cargo install --locked stellar-cli@${{ env.STELLAR_CLI_VERSION }}
 
       - name: Download WASM artifact
@@ -254,7 +262,15 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache Stellar CLI binary
+        id: stellar-cli-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/stellar
+          key: ${{ runner.os }}-stellar-cli-${{ env.STELLAR_CLI_VERSION }}
+
       - name: Install Stellar CLI
+        if: steps.stellar-cli-cache.outputs.cache-hit != 'true'
         run: cargo install --locked stellar-cli@${{ env.STELLAR_CLI_VERSION }}
 
       - name: Download WASM artifact

@@ -56,3 +56,4 @@ Install the sqlx CLI: `cargo install sqlx-cli --no-default-features --features p
 |---------|-----------------------------|---------------------------------------------------|
 | 001     | `001_init.sql`              | Initial schema: `indexer_cursor`, `contract_events`, indexes |
 | 002     | `002_add_voter_index.sql`   | Add `voter_address` column and index for voter vote history |
+| 003     | `003_dedupe_events.sql`     | Remove duplicate events and add a unique index so `ON CONFLICT DO NOTHING` de-duplicates |

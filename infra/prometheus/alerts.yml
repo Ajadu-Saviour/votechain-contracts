@@ -1,0 +1,45 @@
+# Copyright 2024 VoteChain Contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Alerting rules for the VoteChain backend. (#66)
+# Loaded by Prometheus via rule_files in prometheus.yml.
+
+groups:
+  - name: votechain-backend
+    rules:
+      - alert: HighApiLatencyP99
+        expr: >
+          histogram_quantile(
+            0.99,
+            sum(rate(votechain_http_request_duration_seconds_bucket[5m])) by (le)
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API p99 latency above 2s"
+          description: >
+            The 99th percentile request latency has exceeded 2 seconds for
+            5 minutes. Current value: {{ $value }}s.
+
+      - alert: LowCacheHitRate
+        expr: votechain_cache_hit_rate < 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis cache hit rate below 50%"
+          description: >
+            The proposal cache hit rate has been below 50% for 10 minutes.
+            Current value: {{ $value | humanizePercentage }}.

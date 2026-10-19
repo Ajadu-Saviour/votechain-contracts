@@ -40,7 +40,8 @@
     "notFound": "Freighter extension not found. Please install it first.",
     "failed": "Failed to connect wallet.",
     "install": "Install Freighter",
-    "networkMismatch": "Network mismatch: connected to {{network}}, expected {{expected}}"
+    "networkMismatch": "Network mismatch: connected to {{network}}, expected {{expected}}",
+    "cooldown": "Too many failed connection attempts. Please wait {{seconds}} seconds before trying again."
   },
   "transaction": {
     "pending": "Transaction pending...",
