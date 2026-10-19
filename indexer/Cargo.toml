@@ -14,3 +14,10 @@ chrono = { version = "0.4.40", features = ["serde"] }
 tracing = { version = "0.1.41" }
 tracing-subscriber = { version = "0.3.19" }
 anyhow = { version = "1.0.98" }
+
+[profile.dev]
+# Enable SQLx compile-time query verification in development
+# to catch SQL errors early and verify parameterization at compile time.
+# Set SQLX_OFFLINE=false when running `cargo check` or `cargo build`
+# to perform online verification against the PostgreSQL database.
+rustflags = []
